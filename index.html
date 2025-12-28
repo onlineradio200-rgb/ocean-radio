@@ -1,25 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Ocean of Healing Radio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #050b14;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #00d4ff;
+    }
+    p {
+      opacity: 0.8;
+    }
+    audio {
+      width: 100%;
+      max-width: 500px;
+      margin-top: 20px;
+    }
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #00ff99;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="radio">
-    <h1>📻 Ocean of Healing Radio</h1>
+  <h1>🌊 Ocean of Healing Radio</h1>
+  <p>24/7 Gospel • Prayer • Sermons</p>
 
-    <div class="wave">
-      <span></span><span></span><span></span><span></span><span></span>
-    </div>
+  <audio id="radioPlayer" controls></audio>
 
-    <audio id="player" controls autoplay></audio>
-
-    <p id="status">Loading radio…</p>
-  </div>
+  <div class="status" id="status">Loading stream...</div>
 
   <script src="script.js"></script>
 </body>
-    </html> 
+  </html>
