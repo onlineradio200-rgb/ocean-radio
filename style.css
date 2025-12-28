@@ -1,50 +1,81 @@
-body {
-  background: #0b0f1a;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
+const audio = document.getElementById("audio-player");
+const canvas = document.getElementById("wave");
+const ctx = canvas.getContext("2d");
+
+let playlist = [];
+let currentTrackIndex = 0;
+
+/* ---------- Setup Canvas ---------- */
+canvas.width = canvas.offsetWidth;
+canvas.height = canvas.offsetHeight;
+
+/* ---------- Audio Context ---------- */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const analyser = audioCtx.createAnalyser();
+const source = audioCtx.createMediaElementSource(audio);
+source.connect(analyser);
+analyser.connect(audioCtx.destination);
+analyser.fftSize = 256;
+
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
+
+/* ---------- Draw Wave ---------- */
+function drawWave() {
+  requestAnimationFrame(drawWave);
+  analyser.getByteFrequencyData(dataArray);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#00d4ff";
+  const barWidth = (canvas.width / bufferLength) * 2.5;
+  let x = 0;
+
+  for (let i = 0; i < bufferLength; i++) {
+    const barHeight = dataArray[i] / 2;
+    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+    x += barWidth + 1;
+  }
 }
 
-.radio {
-  text-align: center;
-  max-width: 350px;
-  width: 100%;
+/* ---------- Playlist Controls ---------- */
+const playlistEl = document.getElementById("playlist");
+const refreshBtn = document.getElementById("refresh-btn");
+
+async function loadPlaylist() {
+  const res = await fetch("/music/list");
+  playlist = await res.json();
+  renderPlaylist();
+  if (playlist.length > 0) playTrack(0);
 }
 
-h1 {
-  margin-bottom: 20px;
+function renderPlaylist() {
+  playlistEl.innerHTML = "";
+  playlist.forEach((track, i) => {
+    const li = document.createElement("li");
+    li.textContent = track.split("/").pop();
+    li.onclick = () => playTrack(i);
+    playlistEl.appendChild(li);
+  });
 }
 
-audio {
-  width: 100%;
-  margin-top: 20px;
+function playTrack(index) {
+  currentTrackIndex = index;
+  audio.src = playlist[index];
+  audio.play();
 }
 
-/* Wave animation */
-.wave {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
+/* Auto-play next */
+audio.addEventListener("ended", () => {
+  currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+  playTrack(currentTrackIndex);
+});
 
-.wave span {
-  width: 6px;
-  height: 30px;
-  background: #00f7ff;
-  margin: 0 3px;
-  animation: wave 1s infinite ease-in-out;
-}
+/* Refresh Playlist */
+refreshBtn.onclick = loadPlaylist;
 
-.wave span:nth-child(2) { animation-delay: 0.1s; }
-.wave span:nth-child(3) { animation-delay: 0.2s; }
-.wave span:nth-child(4) { animation-delay: 0.3s; }
-.wave span:nth-child(5) { animation-delay: 0.4s; }
+/* ---------- Start Drawing ---------- */
+drawWave();
 
-@keyframes wave {
-  0%, 100% { height: 20px; }
-  50% { height: 50px; }
-}
+/* ---------- Initialize ---------- */
+loadPlaylist();
