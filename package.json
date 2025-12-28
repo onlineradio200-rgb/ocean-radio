@@ -1,15 +1,18 @@
 {
-  "name": "ocean-radio-backend",
+  "name": "oluwa-timileyin-radio",
   "version": "1.0.0",
-  "description": "Ocean Radio backend with A+B+C+D",
+  "description": "Luxury online radio backend and frontend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "multer": "^1.4.5",
-    "socket.io": "^4.7.2",
-    "node-cron": "^3.0.2"
-  }
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "author": "Sunny Bright",
+  "license": "MIT"
 }
