@@ -1,45 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Ocean of Healing Radio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      background: #050b14;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 40px 20px;
-    }
-    h1 {
-      margin-bottom: 10px;
-      color: #00d4ff;
-    }
-    p {
-      opacity: 0.8;
-    }
-    audio {
-      width: 100%;
-      max-width: 500px;
-      margin-top: 20px;
-    }
-    .status {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #00ff99;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Radio - Luxury Online Radio</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="app-container">
+    <header>
+      <h1>Ocean Radio</h1>
+      <p>Creative Luxury Online Radio Experience</p>
+    </header>
 
-  <h1>🌊 Ocean of Healing Radio</h1>
-  <p>24/7 Gospel • Prayer • Sermons</p>
+    <audio id="audio-player" controls></audio>
 
-  <audio id="radioPlayer" controls></audio>
+    <!-- Wave Animation -->
+    <div class="wave-container">
+      <canvas id="wave"></canvas>
+    </div>
 
-  <div class="status" id="status">Loading stream...</div>
+    <!-- Playlist -->
+    <section>
+      <h2>Playlist</h2>
+      <button id="refresh-btn">Refresh Playlist</button>
+      <ul id="playlist"></ul>
+    </section>
+  </div>
 
   <script src="script.js"></script>
 </body>
-  </html>
+        </html>
