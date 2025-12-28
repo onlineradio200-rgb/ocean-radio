@@ -1,81 +1,72 @@
-const audio = document.getElementById("audio-player");
-const canvas = document.getElementById("wave");
-const ctx = canvas.getContext("2d");
+/* ---------- CONFIG ---------- */
+const backendUrl = "https://oluwa-timileyin-radio-backend-jgwk.onrender.com";
 
-let playlist = [];
-let currentTrackIndex = 0;
-
-/* ---------- Setup Canvas ---------- */
-canvas.width = canvas.offsetWidth;
-canvas.height = canvas.offsetHeight;
-
-/* ---------- Audio Context ---------- */
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = audioCtx.createAnalyser();
-const source = audioCtx.createMediaElementSource(audio);
-source.connect(analyser);
-analyser.connect(audioCtx.destination);
-analyser.fftSize = 256;
-
-const bufferLength = analyser.frequencyBinCount;
-const dataArray = new Uint8Array(bufferLength);
-
-/* ---------- Draw Wave ---------- */
-function drawWave() {
-  requestAnimationFrame(drawWave);
-  analyser.getByteFrequencyData(dataArray);
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#00d4ff";
-  const barWidth = (canvas.width / bufferLength) * 2.5;
-  let x = 0;
-
-  for (let i = 0; i < bufferLength; i++) {
-    const barHeight = dataArray[i] / 2;
-    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-    x += barWidth + 1;
-  }
-}
-
-/* ---------- Playlist Controls ---------- */
-const playlistEl = document.getElementById("playlist");
-const refreshBtn = document.getElementById("refresh-btn");
+/* ---------- PLAYLIST (Auto-play Multiple Audios) ---------- */
+const playlistDiv = document.getElementById("playlist");
 
 async function loadPlaylist() {
-  const res = await fetch("/music/list");
-  playlist = await res.json();
-  renderPlaylist();
-  if (playlist.length > 0) playTrack(0);
-}
+  const res = await fetch(`${backendUrl}/music/list`);
+  const audios = await res.json();
 
-function renderPlaylist() {
-  playlistEl.innerHTML = "";
-  playlist.forEach((track, i) => {
-    const li = document.createElement("li");
-    li.textContent = track.split("/").pop();
-    li.onclick = () => playTrack(i);
-    playlistEl.appendChild(li);
+  playlistDiv.innerHTML = "";
+  audios.forEach(src => {
+    const audioEl = document.createElement("audio");
+    audioEl.src = backendUrl + src;
+    audioEl.controls = true;
+    audioEl.autoplay = true;
+    audioEl.loop = true;
+    playlistDiv.appendChild(audioEl);
   });
 }
 
-function playTrack(index) {
-  currentTrackIndex = index;
-  audio.src = playlist[index];
-  audio.play();
+/* Auto-refresh playlist every 30s */
+loadPlaylist();
+setInterval(loadPlaylist, 30000);
+
+/* ---------- LIVE MIC (B) ---------- */
+let micEnabled = false;
+let micSocket;
+
+async function startMic() {
+  if (micEnabled) return;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    micSocket = new WebSocket(`wss://${window.location.host}/mic`);
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+
+    source.connect(processor);
+    processor.connect(audioCtx.destination);
+
+    processor.onaudioprocess = e => {
+      const input = e.inputBuffer.getChannelData(0);
+      const buffer = new Float32Array(input);
+      if (micSocket.readyState === WebSocket.OPEN) micSocket.send(buffer);
+    };
+
+    micEnabled = true;
+    alert("Mic broadcasting started!");
+  } catch (err) {
+    console.error("Mic error:", err);
+    alert("Cannot access microphone.");
+  }
 }
 
-/* Auto-play next */
-audio.addEventListener("ended", () => {
-  currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-  playTrack(currentTrackIndex);
-});
+/* ---------- RECEIVE LIVE MIC ---------- */
+const micPlayer = new Audio();
+micPlayer.autoplay = true;
 
-/* Refresh Playlist */
-refreshBtn.onclick = loadPlaylist;
-
-/* ---------- Start Drawing ---------- */
-drawWave();
-
-/* ---------- Initialize ---------- */
-loadPlaylist();
+const micStreamSocket = new WebSocket(`wss://${window.location.host}/mic`);
+micStreamSocket.onmessage = e => {
+  const audioData = new Float32Array(e.data);
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const buffer = audioCtx.createBuffer(1, audioData.length, audioCtx.sampleRate);
+  buffer.copyToChannel(audioData, 0);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+};
