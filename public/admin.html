@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Radio - Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <h1>Admin Panel</h1>
+    <form id="upload-form">
+      <label for="audio-file">Upload Audio</label>
+      <input type="file" id="audio-file" name="audio" accept=".mp3,.aac,.wav,.ogg">
+      <button type="submit">Upload</button>
+    </form>
+    <div id="upload-result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("upload-form");
+    const resultDiv = document.getElementById("upload-result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById("audio-file");
+      const file = fileInput.files[0];
+      if (!file) return alert("Select a file first!");
+
+      const formData = new FormData();
+      formData.append("audio", file);
+
+      const res = await fetch("/music/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        resultDiv.textContent = `Uploaded: ${data.file}`;
+      } else {
+        resultDiv.textContent = `Error: ${data.error}`;
+      }
+    });
+  </script>
+</body>
+  </html>
